@@ -1,0 +1,41 @@
+# GitHub Actions 工作流名称
+name: Pan1.me Auto Check-in
+
+on:
+  # 定时触发：每天的 UTC 时间 0点30分（北京时间 8点30分）执行
+  schedule:
+    - cron: '30 0 * * *'
+
+  # 手动触发：允许你在 GitHub Actions 页面手动运行此工作流
+  workflow_dispatch:
+
+jobs:
+  check-in-job:
+    # 使用最新的 Ubuntu 虚拟机环境
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 第一步：检出你的代码库
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 第二步：设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      # 第三步：安装依赖库
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      # 第四步：执行签到脚本
+      - name: Run check-in script
+        env:
+          PAN_COOKIE: ${{ secrets.PAN_COOKIE }}
+          # 调试开关：设置为 'true' 来开启调试模式。
+          # 调试成功后，可以改为 'false' 或删除此行以保持日志简洁。
+          DEBUG_MODE: 'true' 
+        run: python checkin.py
