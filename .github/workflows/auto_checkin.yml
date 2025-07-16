@@ -1,49 +1,48 @@
 # GitHub Actions 工作流名称
 name: Pan1.me Auto Check-in
 
+# 工作流的触发条件
 on:
-  # 定时触发：每天的 UTC 时间 0点30分（北京时间 8点30分）执行
+  # 1. 定时触发：使用 cron 表达式，时间为 UTC。
+  #    下面的 '30 0 * * *' 代表每天 UTC 时间 00:30 (北京时间 08:30) 执行。
   schedule:
     - cron: '30 0 * * *'
 
-  # 手动触发：允许你在 GitHub Actions 页面手动运行此工作流
+  # 2. 手动触发：允许你在 Actions 页面手动点击 "Run workflow" 按钮来运行。
+  #    这就是你需要的手动触发功能。
   workflow_dispatch:
 
+# 定义工作流中的任务
 jobs:
+  # 定义一个名为 "check-in-job" 的任务
   check-in-job:
-    # 使用最新的 Ubuntu 虚拟机环境
+    # 指定运行此任务的虚拟机环境
     runs-on: ubuntu-latest
     
+    # 定义任务中的步骤
     steps:
-      # 第一步：检出你的代码库
-      # 使得虚拟机可以访问到你的 checkin.py 文件
+      # 第 1 步：检出代码
+      # 目的是让虚拟机可以访问到仓库中的 checkin.py 等文件
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 第二步：设置 Python 环境
-      # 使用 Python 3.9 版本
+      # 第 2 步：设置 Python 环境
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
-      # 第三步：安装依赖库
-      # 我们的脚本需要 `requests` 库来发送网络请求
+      # 第 3 步：安装脚本所需的依赖库
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      # 第四步：执行签到脚本
-      # 关键步骤！这里通过 `env` 将 GitHub Secret 传递给脚本
+      # 第 4 步：执行签到脚本
+      # 这一步是核心，注意 env 和 run 的缩进级别是相同的
       - name: Run check-in script
         env:
-          # `PAN_COOKIE` 是我们要在 GitHub 上设置的 Secret 名称
           PAN_COOKIE: ${{ secrets.PAN_COOKIE }}
-          # `DEBUG_MODE` 是调试开关
+          # 建议将 DEBUG_MODE 也设置为 Secret，方便在网页上开关调试模式
           DEBUG_MODE: ${{ secrets.DEBUG_MODE }}
         run: python checkin.py
-
-```> **注意**：我将 `DEBUG_MODE` 的值也改为了从 Secrets 读取 (`${{ secrets.DEBUG_MODE }}`)，这样更加灵活。你可以在 Secrets 中设置 `DEBUG_MODE` 为 `true` 来开启调试。如果不需要调试，删除这个 Secret 或将其值设为 `false` 即可。
-
-请按照以上步骤检查，问题应该就能解决。最常见的就是**第一条：文件路径或名称不对**。
